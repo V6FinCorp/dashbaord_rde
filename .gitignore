@@ -1,0 +1,41 @@
+# Security - Never commit tokens or sensitive config
+config_local.py
+*.env
+.env*
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+*.log
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Development files
+test_api.py
+get_nifty50.py
+hellp.py
+nifty50_live.py
+iday.php
+
+# Archives
+*.zip
+*.tar.gz
+
+# Test directories
+test_zone/
+Upstox/
+
+# Temporary files
+*.tmp
+*.temp
