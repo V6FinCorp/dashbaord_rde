@@ -1,0 +1,18 @@
+[
+  {
+    "symbol": "TCS",
+    "instrument_key": "NSE_EQ|INE467B01029",
+    "rsi": 71.74864552549798,
+    "price": 3083.6,
+    "timeframe": "15min",
+    "timestamp": "2025-08-22T16:43:51.744609"
+  },
+  {
+    "symbol": "HDFCBANK",
+    "instrument_key": "NSE_EQ|INE040A01034",
+    "rsi": 71.53337715937053,
+    "price": 1977.2,
+    "timeframe": "15min",
+    "timestamp": "2025-08-22T16:43:51.927940"
+  }
+]
