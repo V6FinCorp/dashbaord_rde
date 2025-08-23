@@ -17,7 +17,10 @@ PORT = int(os.environ.get('PORT', 5000))
 @app.route('/')
 def dashboard():
     """Serve the main dashboard"""
-    return send_from_directory('.', 'dashboard.html')
+    try:
+        return send_from_directory('.', 'dashboard.html')
+    except Exception as e:
+        return f"<h1>Dashboard Loading Error</h1><p>Error: {str(e)}</p><p>Files in directory: {os.listdir('.')}</p>", 500
 
 @app.route('/api/symbols')
 def get_symbols():
@@ -176,6 +179,8 @@ def api_health():
 if __name__ == '__main__':
     print("🚀 Starting Technical Analysis Dashboard for Railway...")
     print(f"🌐 Running on port: {PORT}")
+    print(f"📁 Working directory: {os.getcwd()}")
+    print(f"📄 Files available: {os.listdir('.')}")
     print("📊 Dashboard Features:")
     print("   ✅ RSI Analysis (14-period)")
     print("   ✅ DMA Analysis (10/20/50 periods)")
