@@ -1,0 +1,807 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Technical Analysis Dashboard</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --bg-primary: #ffffff;
+            --bg-secondary: #f8f9fa;
+            --text-primary: #212529;
+            --text-secondary: #6c757d;
+            --border-color: #dee2e6;
+            --accent-color: #007bff;
+            --positive-color: #28a745;
+            --negative-color: #dc3545;
+            --neutral-color: #6c757d;
+            --shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+
+        [data-theme="dark"] {
+            --bg-primary: #1a1a1a;
+            --bg-secondary: #2d2d2d;
+            --text-primary: #ffffff;
+            --text-secondary: #adb5bd;
+            --border-color: #495057;
+            --accent-color: #0d6efd;
+            --positive-color: #198754;
+            --negative-color: #dc3545;
+            --neutral-color: #adb5bd;
+            --shadow: 0 2px 8px rgba(255,255,255,0.1);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            line-height: 1.5;
+            padding-top: 80px;
+            transition: all 0.2s ease;
+        }
+
+        /* Header */
+        .header {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            background: var(--bg-primary);
+            border-bottom: 1px solid var(--border-color);
+            padding: 12px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            z-index: 1000;
+            backdrop-filter: blur(10px);
+            box-shadow: var(--shadow);
+            min-height: 60px;
+        }
+
+        .header-left h1 {
+            font-size: 1.5rem;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin: 0;
+        }
+
+        .header-right {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .company-selector {
+            padding: 8px 16px;
+            border: 2px solid var(--border-color);
+            border-radius: 6px;
+            font-size: 0.875rem;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            cursor: pointer;
+            min-width: 120px;
+            box-shadow: var(--shadow);
+            transition: all 0.3s ease;
+        }
+
+        .company-selector:focus {
+            outline: 2px solid var(--accent-color);
+            outline-offset: -1px;
+        }
+
+        .theme-toggle {
+            background: #e9ecef;
+            border: 2px solid #adb5bd;
+            color: #495057;
+            padding: 8px 16px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.875rem;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            box-shadow: var(--shadow);
+        }
+
+        [data-theme="dark"] .theme-toggle {
+            background: #495057;
+            border: 2px solid #6c757d;
+            color: #ffffff;
+        }
+
+        .theme-toggle:hover {
+            background: #dee2e6;
+            transform: translateY(-1px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+        }
+
+        [data-theme="dark"] .theme-toggle:hover {
+            background: #6c757d;
+            border-color: #adb5bd;
+        }
+
+        /* Container */
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        /* Symbol Info */
+        .symbol-info {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 25px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: var(--shadow);
+        }
+
+        .symbol-name {
+            font-size: 1.5rem;
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .symbol-price {
+            font-size: 1.5rem;
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .symbol-data-info {
+            font-size: 0.875rem;
+            color: var(--text-secondary);
+        }
+
+        /* Tables Container */
+        .tables-container {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 25px;
+            margin-bottom: 30px;
+        }
+
+        .table-section {
+            background: var(--bg-primary);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: var(--shadow);
+            transition: all 0.3s ease;
+        }
+
+        .table-section:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        }
+
+        .table-header {
+            background: var(--bg-secondary);
+            padding: 15px 20px;
+            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .table-title {
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .table-badge {
+            background: var(--accent-color);
+            color: white;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 0.75rem;
+            font-weight: 500;
+        }
+
+        /* Data Table with Strong Dark Mode Support */
+        .data-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.875rem;
+            background: var(--bg-primary);
+        }
+
+        .data-table th,
+        .data-table td {
+            padding: 12px 16px;
+            text-align: left;
+            border-bottom: 1px solid var(--border-color);
+            color: var(--text-primary);
+        }
+
+        .data-table th {
+            background: var(--bg-secondary);
+            font-weight: 600;
+            color: var(--text-primary);
+            font-size: 0.8rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .data-table tbody tr:hover {
+            background: var(--bg-secondary);
+        }
+
+        /* Dark Mode Specific Table Fixes */
+        [data-theme="dark"] .data-table {
+            background: var(--bg-primary) !important;
+        }
+
+        [data-theme="dark"] .data-table th {
+            background: var(--bg-secondary) !important;
+            color: var(--text-primary) !important;
+        }
+
+        [data-theme="dark"] .data-table td {
+            color: var(--text-primary) !important;
+            background: transparent !important;
+        }
+
+        [data-theme="dark"] .data-table tbody tr:hover {
+            background: var(--bg-secondary) !important;
+        }
+
+        /* Color Classes with Enhanced Dark Mode Visibility */
+        .positive {
+            color: var(--positive-color) !important;
+            font-weight: 600 !important;
+        }
+
+        .negative {
+            color: var(--negative-color) !important;
+            font-weight: 600 !important;
+        }
+
+        .neutral {
+            color: var(--neutral-color) !important;
+            font-weight: 600 !important;
+        }
+
+        /* Dark Mode Enhanced Colors */
+        [data-theme="dark"] .positive {
+            color: #28a745 !important;
+        }
+
+        [data-theme="dark"] .negative {
+            color: #dc3545 !important;
+        }
+
+        [data-theme="dark"] .neutral {
+            color: #adb5bd !important;
+        }
+
+        /* Detail Tables */
+        .detail-tables {
+            display: none;
+            margin-top: 20px;
+            padding: 20px;
+            background: var(--bg-secondary);
+            border-radius: 8px;
+            border: 1px solid var(--border-color);
+        }
+
+        .detail-tables.active {
+            display: block;
+        }
+
+        .detail-table {
+            margin-bottom: 20px;
+        }
+
+        .detail-table:last-child {
+            margin-bottom: 0;
+        }
+
+        .detail-table h3 {
+            color: var(--text-primary);
+            margin-bottom: 10px;
+            font-size: 1rem;
+        }
+
+        /* Tabs */
+        .tabs {
+            display: flex;
+            margin-bottom: 20px;
+            border-bottom: 2px solid var(--border-color);
+        }
+
+        .tab {
+            padding: 12px 20px;
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-color);
+            border-bottom: none;
+            cursor: pointer;
+            font-weight: 500;
+            color: var(--text-secondary);
+            transition: all 0.3s ease;
+            border-radius: 8px 8px 0 0;
+            margin-right: 2px;
+        }
+
+        .tab:hover {
+            background: var(--bg-primary);
+            color: var(--text-primary);
+        }
+
+        .tab.active {
+            background: var(--bg-primary);
+            color: var(--accent-color);
+            border-color: var(--accent-color);
+            font-weight: 600;
+        }
+
+        /* Dark Mode Component Fixes */
+        [data-theme="dark"] .symbol-info {
+            background: var(--bg-secondary) !important;
+        }
+
+        [data-theme="dark"] .symbol-name,
+        [data-theme="dark"] .symbol-price {
+            color: var(--text-primary) !important;
+        }
+
+        [data-theme="dark"] .table-section {
+            background: var(--bg-primary) !important;
+            border-color: var(--border-color) !important;
+        }
+
+        [data-theme="dark"] .table-header {
+            background: var(--bg-secondary) !important;
+        }
+
+        [data-theme="dark"] .table-title {
+            color: var(--text-primary) !important;
+        }
+
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            .container {
+                padding: 10px;
+            }
+
+            .symbol-info {
+                flex-direction: column;
+                text-align: center;
+                gap: 10px;
+            }
+
+            .header {
+                padding: 8px 15px;
+                flex-wrap: wrap;
+                min-height: 50px;
+            }
+
+            .header-left h1 {
+                font-size: 1.1rem;
+            }
+
+            .header-right {
+                gap: 8px;
+                flex-wrap: wrap;
+            }
+
+            .theme-toggle,
+            .company-selector {
+                padding: 6px 12px;
+                font-size: 0.8rem;
+                min-width: auto;
+            }
+
+            .data-table {
+                font-size: 0.8rem;
+            }
+
+            .data-table th,
+            .data-table td {
+                padding: 8px 10px;
+            }
+
+            .tabs {
+                flex-wrap: wrap;
+            }
+
+            .tab {
+                flex: 1;
+                min-width: 120px;
+                text-align: center;
+                margin-right: 1px;
+                margin-bottom: 2px;
+            }
+        }
+    </style>
+</head>
+<body data-theme="light">
+    <div class="header">
+        <div class="header-left">
+            <h1>Technical Analysis Dashboard</h1>
+        </div>
+        <div class="header-right">
+            <select class="company-selector" id="companySelector">
+                <option value="RELIANCE">RELIANCE</option>
+                <option value="TCS">TCS</option>
+                <option value="INFY">INFY</option>
+                <option value="HDFC">HDFC</option>
+                <option value="ICICI">ICICI</option>
+            </select>
+            <button class="theme-toggle" id="refreshBtn">
+                <i class="fas fa-sync-alt"></i> Refresh
+            </button>
+            <button class="theme-toggle" id="themeToggle">
+                <i class="fas fa-moon"></i> Dark
+            </button>
+        </div>
+    </div>
+
+    <div class="container">
+        <div class="symbol-info">
+            <div>
+                <div class="symbol-name" id="symbolName">RELIANCE</div>
+                <div class="symbol-data-info">NSE • Real-time data</div>
+            </div>
+            <div class="symbol-price" id="symbolPrice">₹1,411.55</div>
+        </div>
+
+        <div class="tabs">
+            <div class="tab active" data-tab="overview">Overview</div>
+            <div class="tab" data-tab="rsi-detail">RSI Details</div>
+            <div class="tab" data-tab="dma-detail">DMA Details</div>
+            <div class="tab" data-tab="ema-detail">EMA Details</div>
+        </div>
+
+        <div class="detail-tables active" id="overview">
+            <div class="tables-container" id="tablesContainer">
+                <div class="table-section">
+                    <div class="table-header">
+                        <div class="table-title">RSI Analysis</div>
+                        <div class="table-badge">rsi_scanner_final.py</div>
+                    </div>
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>Indicator</th>
+                                <th>Current Value</th>
+                                <th>Signal</th>
+                                <th>Interpretation</th>
+                                <th>Calculation Method</th>
+                            </tr>
+                        </thead>
+                        <tbody id="rsiTableBody">
+                            <tr>
+                                <td><strong>RSI-14</strong></td>
+                                <td class="neutral">58.25</td>
+                                <td class="neutral">NEUTRAL</td>
+                                <td>Normal Range</td>
+                                <td>Wilder's Smoothing</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <div class="table-section">
+                    <div class="table-header">
+                        <div class="table-title">DMA Analysis</div>
+                        <div class="table-badge">tradingview_dma.py</div>
+                    </div>
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>Period</th>
+                                <th>DMA Value</th>
+                                <th>Price Diff (₹)</th>
+                                <th>Price Diff (%)</th>
+                                <th>Signal</th>
+                                <th>Calculation</th>
+                            </tr>
+                        </thead>
+                        <tbody id="dmaTableBody">
+                            <tr>
+                                <td><strong>DMA-10</strong></td>
+                                <td>₹1417.87</td>
+                                <td class="negative">₹-6.32</td>
+                                <td class="negative">-1.26%</td>
+                                <td class="negative">BELOW</td>
+                                <td>Daily Closes (10 days)</td>
+                            </tr>
+                            <tr>
+                                <td><strong>DMA-20</strong></td>
+                                <td>₹1404.78</td>
+                                <td class="negative">₹-24.48</td>
+                                <td class="negative">-0.44%</td>
+                                <td class="negative">BELOW</td>
+                                <td>Daily Closes (20 days)</td>
+                            </tr>
+                            <tr>
+                                <td><strong>DMA-50</strong></td>
+                                <td>₹1447.84</td>
+                                <td class="positive">+₹25.03</td>
+                                <td class="positive">+1.93%</td>
+                                <td class="positive">ABOVE</td>
+                                <td>Daily Closes (50 days)</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <div class="table-section">
+                    <div class="table-header">
+                        <div class="table-title">EMA Analysis</div>
+                        <div class="table-badge">ema_calculator.py</div>
+                    </div>
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>Period</th>
+                                <th>EMA Value</th>
+                                <th>Price Diff (₹)</th>
+                                <th>Price Diff (%)</th>
+                                <th>Signal</th>
+                                <th>Calculation</th>
+                            </tr>
+                        </thead>
+                        <tbody id="emaTableBody">
+                            <tr>
+                                <td><strong>EMA-9</strong></td>
+                                <td>₹1410.58</td>
+                                <td class="negative">₹-7.02</td>
+                                <td class="negative">0.11%</td>
+                                <td class="negative">BELOW</td>
+                                <td>Exponential Weighting</td>
+                            </tr>
+                            <tr>
+                                <td><strong>EMA-15</strong></td>
+                                <td>₹1414.07</td>
+                                <td class="positive">+₹11.64</td>
+                                <td class="positive">+1.08%</td>
+                                <td class="positive">ABOVE</td>
+                                <td>Exponential Weighting</td>
+                            </tr>
+                            <tr style="background: var(--bg-secondary); font-weight: bold;">
+                                <td colspan="2"><strong>EMA Crossover Trend</strong></td>
+                                <td colspan="2" class="positive">BULLISH</td>
+                                <td colspan="2">EMA-9 vs EMA-15</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <div class="detail-tables" id="rsi-detail">
+            <div class="detail-table">
+                <h3>RSI Detailed Analysis</h3>
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>Period</th>
+                            <th>RSI Value</th>
+                            <th>Status</th>
+                            <th>Overbought (>70)</th>
+                            <th>Oversold (<30)</th>
+                            <th>Trend</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><strong>RSI-14</strong></td>
+                            <td class="neutral">58.25</td>
+                            <td class="neutral">NEUTRAL</td>
+                            <td>No</td>
+                            <td>No</td>
+                            <td>Sideways</td>
+                        </tr>
+                        <tr>
+                            <td><strong>RSI-9</strong></td>
+                            <td class="neutral">62.15</td>
+                            <td class="neutral">NEUTRAL</td>
+                            <td>No</td>
+                            <td>No</td>
+                            <td>Slightly Bullish</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <div class="detail-tables" id="dma-detail">
+            <div class="detail-table">
+                <h3>DMA Detailed Analysis</h3>
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>Period</th>
+                            <th>DMA Value</th>
+                            <th>Current Price</th>
+                            <th>Difference</th>
+                            <th>% Difference</th>
+                            <th>Support/Resistance</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><strong>DMA-10</strong></td>
+                            <td>₹1417.87</td>
+                            <td>₹1411.55</td>
+                            <td class="negative">₹-6.32</td>
+                            <td class="negative">-0.45%</td>
+                            <td>Resistance</td>
+                        </tr>
+                        <tr>
+                            <td><strong>DMA-20</strong></td>
+                            <td>₹1404.78</td>
+                            <td>₹1411.55</td>
+                            <td class="positive">₹+6.77</td>
+                            <td class="positive">+0.48%</td>
+                            <td>Support</td>
+                        </tr>
+                        <tr>
+                            <td><strong>DMA-50</strong></td>
+                            <td>₹1447.84</td>
+                            <td>₹1411.55</td>
+                            <td class="negative">₹-36.29</td>
+                            <td class="negative">-2.51%</td>
+                            <td>Strong Resistance</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <div class="detail-tables" id="ema-detail">
+            <div class="detail-table">
+                <h3>EMA Detailed Analysis</h3>
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>Period</th>
+                            <th>EMA Value</th>
+                            <th>Current Price</th>
+                            <th>Difference</th>
+                            <th>% Difference</th>
+                            <th>Crossover Signal</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><strong>EMA-9</strong></td>
+                            <td>₹1410.58</td>
+                            <td>₹1411.55</td>
+                            <td class="positive">₹+0.97</td>
+                            <td class="positive">+0.07%</td>
+                            <td class="positive">Above EMA-9</td>
+                        </tr>
+                        <tr>
+                            <td><strong>EMA-15</strong></td>
+                            <td>₹1414.07</td>
+                            <td>₹1411.55</td>
+                            <td class="negative">₹-2.52</td>
+                            <td class="negative">-0.18%</td>
+                            <td class="negative">Below EMA-15</td>
+                        </tr>
+                        <tr>
+                            <td><strong>EMA-21</strong></td>
+                            <td>₹1416.23</td>
+                            <td>₹1411.55</td>
+                            <td class="negative">₹-4.68</td>
+                            <td class="negative">-0.33%</td>
+                            <td class="negative">Below EMA-21</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Theme Toggle Functionality
+        const themeToggle = document.getElementById('themeToggle');
+        const body = document.body;
+        const themeIcon = themeToggle.querySelector('i');
+
+        // Load saved theme
+        const savedTheme = localStorage.getItem('dashboard-theme') || 'light';
+        body.setAttribute('data-theme', savedTheme);
+        updateThemeButton(savedTheme);
+
+        themeToggle.addEventListener('click', () => {
+            const currentTheme = body.getAttribute('data-theme');
+            const newTheme = currentTheme === 'light' ? 'dark' : 'light';
+            
+            body.setAttribute('data-theme', newTheme);
+            localStorage.setItem('dashboard-theme', newTheme);
+            updateThemeButton(newTheme);
+        });
+
+        function updateThemeButton(theme) {
+            if (theme === 'dark') {
+                themeIcon.className = 'fas fa-sun';
+                themeToggle.innerHTML = '<i class="fas fa-sun"></i> Light';
+            } else {
+                themeIcon.className = 'fas fa-moon';
+                themeToggle.innerHTML = '<i class="fas fa-moon"></i> Dark';
+            }
+        }
+
+        // Tab Functionality
+        const tabs = document.querySelectorAll('.tab');
+        const detailTables = document.querySelectorAll('.detail-tables');
+
+        tabs.forEach(tab => {
+            tab.addEventListener('click', () => {
+                const targetTab = tab.dataset.tab;
+                
+                // Remove active class from all tabs and tables
+                tabs.forEach(t => t.classList.remove('active'));
+                detailTables.forEach(table => table.classList.remove('active'));
+                
+                // Add active class to clicked tab and corresponding table
+                tab.classList.add('active');
+                document.getElementById(targetTab).classList.add('active');
+            });
+        });
+
+        // Company Selector
+        const companySelector = document.getElementById('companySelector');
+        const symbolName = document.getElementById('symbolName');
+        const symbolPrice = document.getElementById('symbolPrice');
+
+        companySelector.addEventListener('change', (e) => {
+            const selectedCompany = e.target.value;
+            symbolName.textContent = selectedCompany;
+            
+            // Simulate price update (in real implementation, this would fetch actual data)
+            const simulatedPrices = {
+                'RELIANCE': '₹1,411.55',
+                'TCS': '₹3,245.80',
+                'INFY': '₹1,892.25',
+                'HDFC': '₹2,567.90',
+                'ICICI': '₹1,125.35'
+            };
+            
+            symbolPrice.textContent = simulatedPrices[selectedCompany] || '₹0.00';
+            
+            // In real implementation, you would also update all the table data
+            console.log(`Loading data for ${selectedCompany}...`);
+        });
+
+        // Refresh Button
+        const refreshBtn = document.getElementById('refreshBtn');
+        refreshBtn.addEventListener('click', () => {
+            const icon = refreshBtn.querySelector('i');
+            icon.style.animation = 'spin 1s linear';
+            
+            setTimeout(() => {
+                icon.style.animation = '';
+                console.log('Data refreshed');
+            }, 1000);
+        });
+
+        // Add spin animation
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes spin {
+                from { transform: rotate(0deg); }
+                to { transform: rotate(360deg); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>
