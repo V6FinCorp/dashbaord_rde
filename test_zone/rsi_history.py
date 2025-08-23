@@ -18,42 +18,52 @@ sys.path.append(dashboard_dir)
 from rsi_config import CONFIG
 from config_local import UPSTOX_ACCESS_TOKEN
 
+def rma(x, n, y0):
+    """
+    Implementation of TradingView's ta.rma (Relative Moving Average/Wilder's Smoothing)
+    """
+    a = 1.0 / n
+    y = np.zeros(len(x))
+    y[0] = y0  # Initialize first value
+    
+    for i in range(1, len(y)):
+        y[i] = a * x[i] + (1 - a) * y[i-1]
+    
+    return y
+
 def calculate_rsi(closes, period=14):
     """
-    Calculate RSI using Wilder's method (same as TradingView).
-    The key differences:
-    1. First average is also Wilder's EMA, not simple average
-    2. Handle zero losses correctly
-    3. Use the same smoothing method throughout
+    Calculate RSI exactly as TradingView does:
+    1. Calculate change
+    2. Split into gain (positive change) and loss (negative change)
+    3. Calculate relative moving average (Wilder's Smoothing) of gains and losses
+    4. Calculate RS and RSI
     """
     closes = np.array(closes)
-    deltas = np.diff(closes)
-    seed_period = period + 1  # Need extra candle for first delta
+    change = np.diff(closes)  # Same as ta.change(close)
     
-    # Separate gains and losses
-    gains = np.where(deltas > 0, deltas, 0)
-    losses = np.where(deltas < 0, -deltas, 0)
+    # Split change into gain and loss
+    gain = np.where(change > 0, change, 0)
+    loss = np.where(change < 0, -change, 0)
     
-    # Initialize lists for results
+    # Calculate initial averages
+    avg_gain = np.mean(gain[:period])
+    avg_loss = np.mean(loss[:period])
+    
+    # Use RMA (Wilder's Smoothing) for gains and losses
+    gains_rma = rma(gain[period-1:], period, avg_gain)
+    losses_rma = rma(loss[period-1:], period, avg_loss)
+    
+    # Calculate RSI
     rsi_values = []
-    
-    # Seed first RS value - using Wilder's EMA for first avg too
-    avg_gain = np.sum(gains[:period]) / period
-    avg_loss = np.sum(losses[:period]) / period
-    
-    # Calculate all RSI values
-    for i in range(period, len(gains)):
-        # Update average gain and loss using Wilder's smoothing
-        avg_gain = ((avg_gain * (period - 1)) + gains[i]) / period
-        avg_loss = ((avg_loss * (period - 1)) + losses[i]) / period
-        
-        # Calculate RS and RSI
-        if avg_loss == 0:
-            rsi = 100.0
+    for i in range(len(gains_rma)):
+        if losses_rma[i] == 0:
+            rsi = 100
+        elif gains_rma[i] == 0:
+            rsi = 0
         else:
-            rs = avg_gain / avg_loss
-            rsi = 100.0 - (100.0 / (1.0 + rs))
-        
+            rs = gains_rma[i] / losses_rma[i]
+            rsi = 100 - (100 / (1 + rs))
         rsi_values.append(rsi)
     
     return rsi_values
@@ -144,7 +154,7 @@ class Colors:
 
 def main():
     # Get Reliance data
-    instrument_key = CONFIG['symbols']['RELIANCE']
+    instrument_key = CONFIG['symbols']['TCS']
     candles = get_candle_data(instrument_key)
     
     if not candles:
