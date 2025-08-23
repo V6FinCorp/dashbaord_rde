@@ -1,6 +1,12 @@
 # RSI Scanner Configuration
+import os
+import sys
+sys.path.append(os.path.join(os.path.dirname(os.path.dirname(__file__)), 'dashboard'))
+from config_local import UPSTOX_ACCESS_TOKEN
 
 CONFIG = {
+    # Authentication
+    'upstox_token': UPSTOX_ACCESS_TOKEN,
     # Symbols to scan with their instrument keys
     'symbols': {
         'RELIANCE': 'NSE_EQ|INE002A01018',
