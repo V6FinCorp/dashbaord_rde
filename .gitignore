@@ -141,3 +141,12 @@ dmypy.json
 # OS
 .DS_Store
 Thumbs.db
+
+# Development backups and versions
+backup_dev_files/
+deployment_versions/
+
+# Temporary and initialization files
+init_stable.py
+*_backup.py
+*_temp.py
